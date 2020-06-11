@@ -1,18 +1,16 @@
 from bs4 import BeautifulSoup
 import urllib
 import json  # 使用了json格式存储
-import time
 import datetime
+from selenium import webdriver
 
 
-def productsCatching():
+def dealWithCurrentPage():
     # url = 'https://careers.tencent.com/'
     # request = urllib.request.Request(url + 'search.html?pcid=40001')
     # request = urllib.request.Request('https://try.jd.com/activity/getActivityList?page=1&activityState=0')
     # response = urllib.request.urlopen(request)
     # htmlhandle = response.read()
-
-    output = open('tencent.json', 'wb+')
 
     # test
     htmlfile = open('test.html', 'r', encoding='utf-8')
@@ -30,8 +28,8 @@ def productsCatching():
     for item in itemList:
         product = {}
 
-        name = item.select("div[class='p-name']")[0].get_text()
-        id = item.attrs['activity_id']
+        product_name = item.select("div[class='p-name']")[0].get_text()
+        product_id = item.attrs['activity_id']
         link = item.select("div[class='try-item'] a")[0].attrs['href']
         daysleft = 0
         time_stamp = item.attrs['end_time']
@@ -40,19 +38,39 @@ def productsCatching():
             today = datetime.date.today()
             daysleft = end_date.__sub__(today).days
 
-        product['name'] = name
-        product['id'] = id
+        product['name'] = product_name
+        product['product_id'] = product_id
         product['link'] = link
         product['days_left'] = daysleft
 
-        products.append(product)
+        if int(daysleft) < 10:
+            products.append(product)
 
-    # 禁用ascii编码，按utf-8编码
-    line = json.dumps(products, ensure_ascii=False)
+    applyForProdcut(products[0])
 
-    output.write(line.encode(encoding='UTF-8'))
-    output.close()
+    # # 禁用ascii编码，按utf-8编码
+    # line = json.dumps(products, ensure_ascii=False)
+    #
+    # output.write(line.encode(encoding='UTF-8'))
+    # output.close()
+
+def applyForProdcut(product):
+    link = product['link']
+    if len(link) > 0:
+        driver = webdriver.Chrome()
+        driver.get(link)
+        driver.quit()
+
+3、解压下载的驱动放到指定目录，代码调用时指定该目录即可。
+
+我把它放在了selenium下的chrome了，代码演示如下
+
+from selenium import webdriver
+
+chrome_driver = r"C:\Python37\Lib\site-packages\selenium\webdriver\chrome\chromedriver.exe"
+browser = webdriver.Chrome(executable_path=chrome_driver)
+
 
 
 if __name__ == "__main__":
-    productsCatching()
+    dealWithCurrentPage()
