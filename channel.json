@@ -1,0 +1,52 @@
+[
+  {
+    "channel_name": "食品饮料" ,
+    "channel_ids": "1320,12259" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=1320,12259"
+  } ,
+  {
+    "channel_name": "家庭清洁" ,
+    "channel_ids": "15901" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=15901"
+  } ,
+  {
+    "channel_name": "个人护理" ,
+    "channel_ids": "16750" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=16750"
+  } ,
+  {
+    "channel_name": "生鲜美食" ,
+    "channel_ids": "12218" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=12218"
+  } ,
+  {
+    "channel_name": "服饰鞋包" ,
+    "channel_ids": "1315,1672,1318,11729" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=1315,1672,1318,11729"
+  } ,
+  {
+    "channel_name": "美妆护肤" ,
+    "channel_ids": "1316" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=1316"
+  } ,
+  {
+    "channel_name": "家居家装" ,
+    "channel_ids": "1620,6728,9847,9855,6196,15248,14065" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=1620,6728,9847,9855,6196,15248,14065"
+  } ,
+  {
+    "channel_name": "电脑办公" ,
+    "channel_ids": "670" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=670"
+  } ,
+  {
+    "channel_name": "手机数码" ,
+    "channel_ids": "652,9987" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=652,9987"
+  } ,
+  {
+    "channel_name": "家用电器" ,
+    "channel_ids": "737" ,
+    "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=737"
+  }
+]
