@@ -1,11 +1,15 @@
 from bs4 import BeautifulSoup
-import urllib
+import urllib.request
 import json  # 使用了json格式存储
 import datetime
 import time
 from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 import re
 import os.path
+import sys
 
 browser = webdriver.Chrome()
 accountsDic = [{'user': 'linzhu0831@163.com', 'password': 'LINzhu2565651'}, {'user': '815924867@qq.com', 'password': 'LINzhu2565651'}]
@@ -20,60 +24,99 @@ def dealWithTrySites():
     channels_dict = json.loads(channels)
     for channel_info in channels_dict:
         print(channel_info)
-        if channel_info['channel_name'] == '生鲜美食':
-            dealWithChannel(channel_info['channel_link'])
+        if channel_info['channel_name'] == '生鲜美食': #--or channel_info['channel_name'] == '食品饮料'*#:
+            dealWithChannel(channel_info)
 
-def dealWithChannel(channel_link):
-    request = urllib.request.Request(channel_link)
-    response = urllib.request.urlopen(request)
-    htmlhandle = response.read()
+def dealWithChannel(channel_info):
+    browser.get(channel_info['channel_link'])
 
-    # # test
-    # htmlfile = open('test.html', 'r', encoding='utf-8')
-    # htmlhandle = htmlfile.read()
-    html = BeautifulSoup(htmlhandle, 'lxml')
+    while True:
 
-    # 创建CSS选择器
-    result = html.select("div[class='items']")
-    if len(result) == 0:
-        print("未找到产品列表")
-        return
-
-    itemList = result[0].find_all("li")
-    for item in itemList:
-        product = {}
-
-        product_name = item.select("div[class='p-name']")[0].get_text()
-        product_id = item.attrs['activity_id']
-        link = item.select("div[class='try-item'] a")[0].attrs['href']
-        if None == re.search('https:', link):
-            link = 'https:' + link
-
-        #只申请距离结束时间小于3天的产品
-        daysleft = 0
-        time_stamp = item.attrs['end_time']
-        if len(time_stamp) > 0:
-            end_date = datetime.date.fromtimestamp(int(time_stamp)/1000)
+        goods_list = browser.find_element_by_id('goods-list')
+        items = goods_list.find_elements_by_xpath('//li[@class="item"]')
+        for item in items:
+            time_stamp = item.get_attribute('end_time')
+            end_date = datetime.date.fromtimestamp(int(time_stamp) / 1000)
             today = datetime.date.today()
             daysleft = end_date.__sub__(today).days
+            name = item.find_element_by_class_name('p-name').text
+            blacklist_re = '|'.join(channel_info['channel_blacklist'])
+            in_blacklist = bool(re.search(blacklist_re, name) != None)
+            #只申请距离结束3天之内的产品，产品名称不能在黑名单之内
+            if not in_blacklist and daysleft < 3:
+                #打开试用产品申请页
+                link = item.find_element_by_class_name('link').get_attribute('href')
+                if None == re.search('https:', link):
+                    link = 'https:' + link
+                js = 'window.open(' + '\"' + link +'\"' + ')'
+                browser.execute_script(js)
+                handles = browser.window_handles
+                browser.switch_to.window(handles[1])
 
-        if daysleft < 3:
-            product['name'] = product_name
-            product['product_id'] = product_id
-            product['link'] = link
-            product['days_left'] = daysleft
-            applyForProdcut(product)
-        else:
-            print("离申请结束超过3天，不申请： " + product['name'])
+                while True:
+                    # 循环尝试申请直到成功为止
+                    # 点击申请
+                    apply_btn = WebDriverWait(browser, 5).until(
+                        EC.presence_of_element_located((By.XPATH, '//a[text()="申请试用"]')))
+                    apply_btn.click()
 
-def applyForProdcut(product):
-    print("复合条件，申请产品： " + product['name'])
-    link = product['link']
-    if len(link) > 0:
-        browser.get(link)
-        time.sleep(2)
+                    # 检查是否弹出"关注并申请"对话框
+                    try:
+                        follow_apply_btn = WebDriverWait(browser, 1).until(EC.presence_of_element_located((By.XPATH,
+                                                                                                           '//div[@class="ui-dialog"]/div[@class="ui-dialog-content"]/div/div/div[@class="btn"]/a[text()="关注并申请"]')))
+                        follow_apply_btn.click()
+                    except:
+                        None
 
+                    time.sleep(2)
+                    try:
+                        alert_tip = browser.find_element_by_xpath('//div[@class="ui-dialog tipsAlert"]/div[@class="ui-dialog-content"]/div/div[1]').text
+                    except:
+                        alert_tip = ""
 
+                    if re.search('未关注店铺', alert_tip):
+                        # 未关注店铺，申请失败，先进店关注
+                        browser.refresh()
+                        time.sleep(2)
+                        if browser.find_element_by_xpath(
+                                '//a[@class="btn-def follow-shop J-follow-shop"]').text == "关注店铺":
+                            mall_link = browser.find_element_by_xpath(
+                                '//a[@class="btn-def enter-shop J-enter-shop"]').get_attribute('href')
+                            browser.get(mall_link)
+                            follow_btn = WebDriverWait(browser, 5).until(
+                                EC.presence_of_element_located((By.XPATH, '//div[@id="shop-attention"]')))
+                            follow_btn.click()
+                            time.sleep(1)
+                            #后退并刷新，等待尝试再次申请
+                            browser.back()
+                            browser.refresh()
+                            time.sleep(2)
+                    elif re.search('申请成功|京享值', alert_tip):
+                        #申请成功，退出循环
+                        break
+                    elif re.search('超过上限', alert_tip):
+                        sys.exit()
+                    else:
+                        break
+
+                # follow_apply_btn = WebDriverWait(browser, 20).until(EC.presence_of_element_located((By.XPATH, '//a[text()="关注并申请"]')))
+                # is_visible = bool(EC.visibility_of_element_located((By.XPATH,'//a[text()="关注并申请"]'))(browser))
+
+                #申请成功，关闭当前页，回到试用列表
+                browser.close()
+                browser.switch_to.window(handles[0])
+
+                # 等待5秒再进行下一个申请
+                time.sleep(5)
+
+        # 下一页
+        try:
+            next_page_button = WebDriverWait(browser, 5).until(EC.presence_of_element_located((By.XPATH, '//a[@class="ui-pager-next"]')))
+            next_page_button.click()
+            time.sleep(2)
+        except:
+            #已经到了最后一页，退出循环
+            break
 
 def loginJD(user_dict):
 
@@ -134,8 +177,9 @@ def login_with_cookies(user_dict):
 
 
 if __name__ == "__main__":
-    dealWithTrySites()
-    # for account in accountsDic:
-    #     loginJD(account)
-    #     print("用户：" + account['user'] + " 已登录，跳转试用列表")
-    #     dealWithCurrentPage()
+    for account in accountsDic:
+        if account['user'] == '815924867@qq.com':
+            continue
+        loginJD(account)
+        print("用户：" + account['user'] + " 已登录，跳转试用列表")
+        dealWithTrySites()
