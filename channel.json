@@ -3,7 +3,7 @@
     "channel_name": "食品饮料" ,
     "channel_ids": "1320,12259" ,
     "channel_link": "https://try.jd.com/activity/getActivityList?page=1&activityState=0&cids=1320,12259",
-    "channel_blacklist": ["白酒", "小龙虾", "海参", "威士忌", "啤酒", "五粮液", "茅台", "人参男人", "小酒", "人头马"]
+    "channel_blacklist": ["白酒", "小龙虾", "海参", "威士忌", "啤酒", "五粮液", "茅台", "人参男人", "小酒", "人头马", "古井贡酒", "男人茶", "中国劲酒", "干邑"]
   } ,
   {
     "channel_name": "家庭清洁" ,
